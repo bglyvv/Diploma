@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+    stages {
+        stage('Clone Git repository') {
+            steps {
+                git branch: 'master', credentialsId: 'gitlabAuth', url: 'https://gitlab.com/digital_life/affa-license/frontend.git'
+            }
+        }
+        stage('Stop IIS frontend server') {
+            steps {
+                bat 'C:\\Windows\\System32\\inetsrv\\appcmd.exe stop site /site.name:"Affa-License-Frontend"'
+            }
+        }
+        stage('Install node packages'){
+            steps {
+                bat 'C:\\Users\\Administrator\\AppData\\Roaming\\npm\\yarn install'
+            }
+        }
+        stage('Build project') {
+            steps {
+                bat 'C:\\Users\\Administrator\\AppData\\Roaming\\npm\\yarn run build'
+            }
+        }
+        stage('Copy all files and folder to server folder') {
+            steps {
+                dir('build'){
+                    bat 'xcopy * C:\\inetpub\\wwwroot\\Affa-License-Frontend /E /Y'
+                }
+            }
+        }
+        stage('Start IIS frontend server') {
+            steps {
+                bat 'C:\\Windows\\System32\\inetsrv\\appcmd.exe start site /site.name:"Affa-License-Frontend"'
+            }
+        }
+        
+    }
+}
